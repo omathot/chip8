@@ -108,7 +108,7 @@ impl Emu {
 	}
 	fn execute(&mut self, op: u16) {
 		let [high, low] = op.to_be_bytes();
-		let nibbles = (high >> 4, high & 0xF, low >> 4, low % 0xF);
+		let nibbles = (high >> 4, high & 0xF, low >> 4, low & 0xF);
 
 		match nibbles {
 			// NOP
@@ -134,7 +134,7 @@ impl Emu {
 			// Skip if Vx == kk
 			(3, _, _, _) => {
 				let x = nibbles.1 as usize;
-				let kk = (op & 0xFFF) as u8;
+				let kk = (op & 0xFF) as u8;
 				if self.v_regs[x] == kk {
 					self.pc += 2;
 				}
@@ -264,13 +264,13 @@ impl Emu {
 					let addr = self.i_reg + y_line as u16;
 					let pixels = self.ram[addr as usize];
 					for x_line in 0..8 {
-						if pixels & (0b1000_000 >> x_line) != 0 {
+						if pixels & (0b1000_0000 >> x_line) != 0 {
 							let x = (x_coord + x_line) as usize % SCREEN_WIDTH;
 							let y = (y_coord + y_line) as usize % SCREEN_HEIGHT;
 
 							let idx = x + SCREEN_WIDTH * y;
 							flipped |= self.screen[idx];
-							self.screen[idx] = true;
+							self.screen[idx] ^= true;
 						}
 					}
 				}
@@ -351,7 +351,7 @@ impl Emu {
 
 				let hundreds = (vx / 100.).floor() as u8;
 				let tens = ((vx / 10.) % 10.).floor() as u8;
-				let ones = (vx % 100.0).floor() as u8;
+				let ones = (vx % 10.).floor() as u8;
 
 				self.ram[self.i_reg as usize] = hundreds;
 				self.ram[(self.i_reg + 1) as usize] = tens;
