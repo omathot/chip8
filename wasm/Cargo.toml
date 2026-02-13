@@ -8,8 +8,14 @@ crate-type = ["cdylib"]
 
 [dependencies]
 chip8_core = { path = "../chip8_core/" }
-js-sys = "0.3.85"
-wasm-bindgen = "0.2.108"
+leptos = "0.8.15"
+leptos_meta = "0.8.5"
+leptos_router = "0.8.11"
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
+# client
+js-sys = { version = "0.3.85", optional = true }
+wasm-bindgen = { version = "0.2.108", optional = true }
 web-sys = { version = "0.3.85", features = [
   "KeyboardEvent",
   "CanvasRenderingContext2d",
@@ -17,5 +23,46 @@ web-sys = { version = "0.3.85", features = [
   "Element",
   "HtmlCanvasElement",
   "ImageData",
-  "Window"
-]}
+  "Window",
+  "HtmlInputElement",
+  "FileList",
+  "File",
+  "ProgressEvent"
+], optional = true }
+
+# server
+axum = { version = "0.8.8", optional = true }
+tokio = { version = "1.49.0", features = ["rt-multi-thread"], optional = true }
+leptos_axum = { version = "0.8.7", optional = true }
+
+[features]
+hydrate = [
+  "leptos/hydrate",
+  "dep:console_error_panic_hook",
+  "dep:wasm-bindgen",
+  "dep:web-sys",
+  "dep:js-sys"
+]
+ssr = [
+  "dep:axum",
+  "dep:tokio",
+  "dep:leptos_axum",
+  "leptos/ssr",
+  "leptos_meta/ssr",
+  "leptos_router/ssr"
+]
+
+[package.metadata.leptos]
+output-name = "chip8-web"
+site-root = "target/site"
+site-pkg-dir = "pkg"
+site-addr = "127.0.0.1:3000"
+reload-port = 3001
+browserquery = "defaults"
+watch = false
+env = "DEV"
+bin-features = ["ssr"]
+bin-default-features = false
+lib-features = ["hydrate"]
+lib-default-features = false
+lib-profile-release = "wasm-release"
