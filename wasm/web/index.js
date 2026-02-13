@@ -3,7 +3,7 @@ import init, * as wasm from "./wasm.js"
 const WIDTH = 64;
 const HEIGHT = 32;
 const SCALE = 15;
-const TICK_PER_FRAME = 10;
+const TICK_PER_FRAME = 5;
 let anim_frame = 0;
 
 const canvas = document.getElementById("canvas");
