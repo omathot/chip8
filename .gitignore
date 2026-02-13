@@ -1,3 +1,4 @@
 chip8_core/target
 desktop/target
+wasm/target
 

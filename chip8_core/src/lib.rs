@@ -222,7 +222,7 @@ impl Emu {
 				self.v_regs[0xF] = new_vf;
 			}
 			// SET Vx <<= 1
-			(8, _, _, 8) => {
+			(8, _, _, 0xE) => {
 				let x = nibbles.1 as usize;
 				let msb = (self.v_regs[x] >> 7) & 1;
 				self.v_regs[x] <<= 1;

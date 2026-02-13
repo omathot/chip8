@@ -3,12 +3,6 @@
 version = 4
 
 [[package]]
-name = "bitflags"
-version = "2.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
-
-[[package]]
 name = "bumpalo"
 version = "3.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -26,14 +20,6 @@ version = "0.1.0"
 dependencies = [
  "getrandom",
  "rand",
-]
-
-[[package]]
-name = "desktop"
-version = "0.1.0"
-dependencies = [
- "chip8_core",
- "sdl3",
 ]
 
 [[package]]
@@ -61,16 +47,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "lazy_static"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
-
-[[package]]
 name = "libc"
-version = "0.2.181"
+version = "0.2.182"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "459427e2af2b9c839b132acb702a1c654d95e10f8c326bfc2ad11310e458b1c5"
+checksum = "6800badb6cb2082ffd7b6a67e6125bb39f18782f793520caee8cb8846be06112"
 
 [[package]]
 name = "once_cell"
@@ -147,24 +127,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
 
 [[package]]
-name = "sdl3"
-version = "0.17.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dce0693cede7f7901e968e5539f87174d0fb5fac5d489a3e3be52b2b4a0b49c5"
-dependencies = [
- "bitflags",
- "lazy_static",
- "libc",
- "sdl3-sys",
-]
-
-[[package]]
-name = "sdl3-sys"
-version = "0.6.0+SDL-3.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8361b0312462d2cf9c115fcbdf9cfceceef79d53faec3b50efd6447ac903eb23"
-
-[[package]]
 name = "syn"
 version = "2.0.115"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -188,6 +150,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9517f9239f02c069db75e65f174b3da828fe5f5b945c4dd26bd25d89c03ebcf5"
 dependencies = [
  "wit-bindgen",
+]
+
+[[package]]
+name = "wasm"
+version = "0.1.0"
+dependencies = [
+ "chip8_core",
+ "js-sys",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -233,6 +205,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f01b580c9ac74c8d8f0c0e4afb04eeef2acf145458e52c03845ee9cd23e3d12"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "web-sys"
+version = "0.3.85"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "312e32e551d92129218ea9a2452120f4aabc03529ef03e4d0d82fb2780608598"
+dependencies = [
+ "js-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]
