@@ -25,10 +25,14 @@ pub fn App() -> impl IntoView {
 	provide_meta_context();
 
 	view! {
+		<Stylesheet id="leptos" href="/pkg/chip8-web.css"/>
+		<Link rel="icon" type_="image/png" href="/favicon.png"/>
 		<Title text="Chip-8 Emulator"/>
 		<main>
 			<h1>"Chip-8 Emulator"</h1>
 			<Emulator/>
+			<h1>"Counter"</h1>
+			<Counter/>
 		</main>
 	}
 }
@@ -175,5 +179,22 @@ fn key_to_btn(key: &str) -> Option<usize> {
 		"c" => Some(0xB),
 		"v" => Some(0xF),
 		_ => None,
+	}
+}
+
+#[component]
+fn Counter() -> impl IntoView {
+	let (count, set_count) = signal(0);
+
+	view! {
+		<button
+			on:click=move |_| {
+				*set_count.write() += 1;
+			}
+			class:red=move || count.get() % 2 == 1
+		>
+			"Click me: "
+			{count}
+		</button>
 	}
 }
