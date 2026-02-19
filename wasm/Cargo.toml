@@ -34,6 +34,7 @@ web-sys = { version = "0.3.85", features = [
 axum = { version = "0.8.8", optional = true }
 tokio = { version = "1.49.0", features = ["rt-multi-thread"], optional = true }
 leptos_axum = { version = "0.8.7", optional = true }
+leptos-use = "0.18.0"
 
 [features]
 hydrate = [
@@ -59,8 +60,6 @@ site-pkg-dir = "pkg"
 site-addr = "127.0.0.1:3000"
 reload-port = 3001
 browserquery = "defaults"
-watch = false
-env = "DEV"
 bin-features = ["ssr"]
 bin-default-features = false
 lib-features = ["hydrate"]

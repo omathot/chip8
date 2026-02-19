@@ -1,6 +1,8 @@
 use chip8_core::*;
+use leptos::ev;
 use leptos::prelude::*;
 use leptos_meta::*;
+use leptos_use::{use_event_listener, use_raf_fn};
 #[cfg(feature = "hydrate")]
 use {
 	js_sys::Uint8Array,
@@ -45,7 +47,6 @@ fn Emulator() -> impl IntoView {
 	let on_file_change = {
 		#[cfg(feature = "hydrate")]
 		{
-			let set_rom_loaded = set_rom_loaded;
 			move |ev: leptos::ev::Event| {
 				let input: HtmlInputElement = event_target(&ev);
 				let files = input.files().unwrap();
@@ -115,32 +116,20 @@ fn start_game(emu: Rc<RefCell<Emu>>, ctx: CanvasRenderingContext2d, canvas: Html
 	let emu_down = emu.clone(); // RC, doesn't clone, increments ref count
 	let emu_up = emu.clone();
 
-	let keydown = Closure::<dyn FnMut(KeyboardEvent)>::new(move |ev: KeyboardEvent| {
+	// don't care to keep a handle to these
+	let _ = use_event_listener(document(), ev::keydown, move |ev: KeyboardEvent| {
 		if let Some(k) = key_to_btn(&ev.key()) {
 			emu_down.borrow_mut().keypress(k, true);
 		}
 	});
-	let keyup = Closure::<dyn FnMut(KeyboardEvent)>::new(move |ev: KeyboardEvent| {
+	let _ = use_event_listener(document(), ev::keyup, move |ev: KeyboardEvent| {
 		if let Some(k) = key_to_btn(&ev.key()) {
 			emu_up.borrow_mut().keypress(k, false);
 		}
 	});
 
-	let document = web_sys::window().unwrap().document().unwrap();
-	document
-		.add_event_listener_with_callback("keydown", keydown.as_ref().unchecked_ref())
-		.unwrap();
-	document
-		.add_event_listener_with_callback("keyup", keyup.as_ref().unchecked_ref())
-		.unwrap();
-	keyup.forget();
-	keydown.forget();
-
 	// animation loop
-	let f: Rc<RefCell<Option<Closure<dyn FnMut()>>>> = Rc::new(RefCell::new(None));
-	let g = f.clone();
-
-	*g.borrow_mut() = Some(Closure::new(move || {
+	let pausable = use_raf_fn(move |_args| {
 		let mut e = emu.borrow_mut();
 		for _ in 0..TICK_PER_FRAME {
 			e.tick();
@@ -163,17 +152,8 @@ fn start_game(emu: Rc<RefCell<Emu>>, ctx: CanvasRenderingContext2d, canvas: Html
 				);
 			}
 		}
-		request_anim(f.borrow().as_ref().unwrap());
-	}));
-	request_anim(g.borrow().as_ref().unwrap());
-}
-
-#[cfg(feature = "hydrate")]
-fn request_anim(f: &Closure<dyn FnMut()>) {
-	web_sys::window()
-		.unwrap()
-		.request_animation_frame(f.as_ref().unchecked_ref())
-		.unwrap();
+	});
+	(pausable.resume)();
 }
 
 fn key_to_btn(key: &str) -> Option<usize> {
