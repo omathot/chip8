@@ -2,5 +2,4 @@
 members = [
     "chip8_core",
     "desktop",
-    "wasm",
 ]
