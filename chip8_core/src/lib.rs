@@ -98,6 +98,9 @@ impl Emu {
 			self.st -= 1;
 		}
 	}
+	pub fn get_sound_timer(&self) -> u8 {
+		self.st
+	}
 
 	fn fetch(&mut self) -> u16 {
 		let higher_byte = self.ram[self.pc as usize] as u16;
