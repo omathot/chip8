@@ -5,11 +5,11 @@ Following [this introduction](https://github.com/aquova/chip8-book?tab=readme-ov
 
 
 ## Build
-If you don't want to build this project from source, it is also available in your browser over [here](https://omathot.com)\
+If you don't want to build this project from source, it is also available in your browser over [here](https://omathot.com/emulators)\
 If you do:
 ### Requirements
 - rust toolchain
-- sdl3 for desktop
+- SDL3
 
 ```
 git clone https://github.com/omathot/chip8.git
