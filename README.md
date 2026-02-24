@@ -3,6 +3,10 @@
 A project to teach myself the basics of emulation.
 Following [this introduction](https://github.com/aquova/chip8-book?tab=readme-ov-file) and [this technical ref](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.3)
 
+Edit: Turns out the technical ref mentionned above has a few inaccuracies and some chip8 extension opcode descriptions got put in instead of the base opcodes.
+Realised this when running [this test suite](https://github.com/Timendus/chip8-test-suite) which showed some quirks and differences.
+This emulator now passes the test-suite linked previously.
+
 
 ## Build
 If you don't want to build this project from source, it is also available in your browser over [here](https://omathot.com/emulators)\
