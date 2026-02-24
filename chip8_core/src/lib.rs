@@ -51,6 +51,9 @@ pub struct Emu {
 	keys: [bool; NUM_KEYS],
 	dt: u8, // normal timer (delay timer, perform some action when hits 0)
 	st: u8, // sound timer (emits when hits 0)
+
+	draw_flag: bool,
+	key_wait: Option<u8>, // key release state
 }
 impl Emu {
 	pub fn new() -> Self {
@@ -65,6 +68,8 @@ impl Emu {
 			keys: [false; NUM_KEYS],
 			dt: 0,
 			st: 0,
+			draw_flag: true,
+			key_wait: None,
 		};
 		new_emu.ram[..FONTSET_SIZE].copy_from_slice(&FONTSET);
 		new_emu
@@ -81,12 +86,15 @@ impl Emu {
 		self.dt = 0;
 		self.st = 0;
 		self.ram[..FONTSET_SIZE].copy_from_slice(&FONTSET);
+		self.draw_flag = true;
+		self.key_wait = None;
 	}
 	pub fn tick(&mut self) {
 		let op = self.fetch();
 		self.execute(op);
 	}
 	pub fn tick_timers(&mut self) {
+		self.draw_flag = false;
 		if self.dt > 0 {
 			self.dt -= 1;
 		}
@@ -179,16 +187,19 @@ impl Emu {
 			(8, _, _, 1) => {
 				let (x, y) = xy_nibbles(nibbles);
 				self.v_regs[x] |= self.v_regs[y];
+				self.v_regs[0xF] = 0;
 			}
 			// Set Vx &= Vy
 			(8, _, _, 2) => {
 				let (x, y) = xy_nibbles(nibbles);
 				self.v_regs[x] &= self.v_regs[y];
+				self.v_regs[0xF] = 0;
 			}
 			// Set Vx ^= Vy (XOR)
 			(8, _, _, 3) => {
 				let (x, y) = xy_nibbles(nibbles);
 				self.v_regs[x] ^= self.v_regs[y];
+				self.v_regs[0xF] = 0;
 			}
 			// Set Vx += Vy, VF = carry
 			(8, _, _, 4) => {
@@ -210,9 +221,9 @@ impl Emu {
 			}
 			// Set VX >>= 1
 			(8, _, _, 6) => {
-				let x = nibbles.1 as usize;
-				let lsb = self.v_regs[x] & 1;
-				self.v_regs[x] >>= 1;
+				let (x, y) = xy_nibbles(nibbles);
+				let lsb = self.v_regs[y] & 1;
+				self.v_regs[x] = self.v_regs[y] >> 1;
 				self.v_regs[0xF] = lsb;
 			}
 			// Set Vx = Vy - Vx, VF = NOT BORROW
@@ -226,9 +237,9 @@ impl Emu {
 			}
 			// SET Vx <<= 1
 			(8, _, _, 0xE) => {
-				let x = nibbles.1 as usize;
-				let msb = (self.v_regs[x] >> 7) & 1;
-				self.v_regs[x] <<= 1;
+				let (x, y) = xy_nibbles(nibbles);
+				let msb = (self.v_regs[y] >> 7) & 1;
+				self.v_regs[x] = self.v_regs[y] << 1;
 				self.v_regs[0xF] = msb;
 			}
 			// Skip if Vx != Vy
@@ -258,20 +269,28 @@ impl Emu {
 			// Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
 			// where n : num of rows for sprite (width (columns) are always 8 pixels)
 			(0xD, _, _, _) => {
+				if self.draw_flag {
+					self.pc -= 2; // for display wait quirk
+					return;
+				}
+				self.draw_flag = true;
 				let (x, y) = xy_nibbles(nibbles);
 				let n = op & 0xF;
-				let x_coord = self.v_regs[x] as u16;
-				let y_coord = self.v_regs[y] as u16;
+				let x_coord = (self.v_regs[x] as usize) % SCREEN_WIDTH;
+				let y_coord = (self.v_regs[y] as usize) % SCREEN_HEIGHT;
 				let mut flipped = false;
 				for y_line in 0..n {
 					let addr = self.i_reg + y_line as u16;
 					let pixels = self.ram[addr as usize];
 					for x_line in 0..8 {
 						if pixels & (0b1000_0000 >> x_line) != 0 {
-							let x = (x_coord + x_line) as usize % SCREEN_WIDTH;
-							let y = (y_coord + y_line) as usize % SCREEN_HEIGHT;
+							let px = (x_coord as u16 + x_line) as usize;
+							let py = (y_coord as u16 + y_line) as usize;
+							if px >= SCREEN_WIDTH || py >= SCREEN_HEIGHT {
+								continue;
+							}
 
-							let idx = x + SCREEN_WIDTH * y;
+							let idx = px + SCREEN_WIDTH * py;
 							flipped |= self.screen[idx];
 							self.screen[idx] ^= true;
 						}
@@ -309,16 +328,22 @@ impl Emu {
 			// Wait for keypress, store in VX
 			(0xF, _, 0, 0xA) => {
 				let x = nibbles.1 as usize;
-				let mut pressed = false;
-				for i in 0..self.keys.len() {
-					if self.keys[i] {
-						self.v_regs[x] = i as u8;
-						pressed = true;
-						break;
+				match self.key_wait {
+					Some(key) => {
+						if !self.keys[key as usize] {
+							self.v_regs[x] = key;
+							self.key_wait = None;
+						} else {
+							self.pc -= 2; // still held
+						}
 					}
-				}
-				if !pressed {
-					self.pc -= 2;
+					None => match self.keys.iter().position(|&k| k) {
+						Some(idx) => {
+							self.key_wait = Some(idx as u8);
+							self.pc -= 2;
+						}
+						None => self.pc -= 2,
+					},
 				}
 			}
 			// Set Delay Timer = Vx
@@ -367,6 +392,7 @@ impl Emu {
 				for idx in 0..=x {
 					self.ram[i + idx] = self.v_regs[idx];
 				}
+				self.i_reg += x as u16 + 1;
 			}
 			(0xF, _, 6, 5) => {
 				let x = nibbles.1 as usize;
@@ -374,6 +400,7 @@ impl Emu {
 				for idx in 0..=x {
 					self.v_regs[idx] = self.ram[i + idx];
 				}
+				self.i_reg += x as u16 + 1;
 			}
 			(_, _, _, _) => unimplemented!("Unimplemented opcode: {}", op),
 		};

@@ -14,7 +14,7 @@ use std::io::Read;
 const SCALE: u32 = 15;
 const WINDOW_WIDTH: u32 = (SCREEN_WIDTH as u32) * SCALE;
 const WINDOW_HEIGHT: u32 = (SCREEN_HEIGHT as u32) * SCALE;
-const TICK_PER_FRAME: usize = 5; // how many opcodes per frame to process
+const TICK_PER_FRAME: usize = 10; // how many opcodes per frame to process
 
 struct SquareWave {
 	phase_inc: f32,
